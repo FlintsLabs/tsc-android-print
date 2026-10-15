@@ -1,0 +1,16 @@
+TSC Direct Print
+Copyright (c) 2026 FlintsLabs contributors
+Project source is distributed under the MIT License; see LICENSE.
+
+This application uses ZXing Core, Copyright ZXing authors, distributed under
+the Apache License, Version 2.0. Its license is included in the APK at
+assets/licenses/zxing-LICENSE.txt and in the source tree at
+app/src/main/assets/licenses/zxing-LICENSE.txt.
+
+AndroidX and Jetpack Compose dependencies retain their respective licenses,
+primarily the Apache License, Version 2.0. JUnit is used for development tests
+under the Eclipse Public License 1.0.
+
+TSC and MH261T are names of their respective owners. This independent project
+is not affiliated with or endorsed by TSC. No vendor driver binaries,
+firmware or proprietary SDK are included.
