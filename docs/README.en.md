@@ -78,6 +78,8 @@ After installing 1.3.4 or newer once, open **ตั้งค่า → อัป
 
 Checking/downloading needs Internet access to GitHub. Printing continues directly over the LAN. There are no automatic background checks or silent installs. See [update details and recovery](updating.md).
 
+**Physical-device acceptance — 2026-10-16:** The user confirmed a successful in-app update from **1.3.4 → 1.3.5**, with printer settings and paper sizes retained. The device model and Android version were not recorded, and printing after the update was not reported. See the [verification scope](verification.md#physical-device-in-app-update--134--135-2026-10-16).
+
 ## Development / license
 
 See [building](building.md), [architecture](architecture.md), [verification](verification.md) and [changelog](../CHANGELOG.md). Project code uses [MIT](../LICENSE); dependencies retain their own licenses, listed in [NOTICE](../NOTICE). No vendor driver binaries, firmware or proprietary SDK are included. This project is not affiliated with or endorsed by TSC.

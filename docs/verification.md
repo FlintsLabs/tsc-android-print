@@ -1,5 +1,11 @@
 # Verification
 
+## Physical-device in-app update — 1.3.4 → 1.3.5 (2026-10-16)
+
+- **User-confirmed acceptance on a real device:** after trying the published [v1.3.5 Release](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.5) through the app's update flow, the user reported: “อัปเดตผ่านแอปเป็น 1.3.5 ได้แล้วครับ ข้อมูลเครื่องพิมพ์และขนาดกระดาษยังอยู่ครบ”. The reported upgrade was **1.3.4 → 1.3.5**.
+- Outcome: the in-app update succeeded, and existing printer settings and paper sizes were retained. This is the user's physical-device report, separate from emulator instrumentation, test-only installer fixtures and earlier ADB deployments; no new ADB readback or device logs were collected for this acceptance.
+- Scope: device model, IP address, Android version and number of devices tested were not recorded. This does not establish acceptance on all previously deployed devices or all OEMs. Printing after the update, reboot/long-idle behavior and restricted/low-storage installer scenarios were not reported or retested.
+
 ## In-app updater — 1.3.4 (2026-10-15)
 
 - `:core:test` passed **33 cases**; debug assembly, Android test APK assembly and `:app:lintDebug` passed. Signed `:app:assembleRelease` and `:app:lintRelease` passed for **1.3.4 (9)**. Certificate SHA-256 remains `8e2dac87fd0dc053177e879b1e2aa0e931c0fa8c9af061f8bf5cafb920dc37f6`. Pre-commit verification APK SHA-256: `ba03d5686e5abbfabe34fd1c31ca115145db42623f0ca53d987196c064e7091a`. The final tagged build records its checksum in the Release asset `SHA256SUMS.txt`; rebuilding after commit also updates embedded Git revision metadata.
@@ -8,7 +14,7 @@
 - Emulator-only native install acceptance staged a **test-only debug-signed no-code 1.3.5 fixture**, restored it through production verification, opened Android's actual unknown-source permission screen, then native Update confirmation. Package Manager remained at code 9 until confirmation and reported code 10 afterwards. SharedPreferences bytes matched before/after. The real debug 1.3.4 app was restored afterwards. This fixture is not a public Release or a product APK; test APK fixtures are excluded from the signed release APK.
 - Inspected actual Settings renders with live GitHub checks on compact light/dark (1080 × 2160 / 480 dpi), 1.5× text, and wide light (1920 × 1200 / 240 dpi). Check controls remained readable and reachable by scrolling. Progress, ready and error controls were also captured. System animation scales were disabled; no custom motion was added. The wide capture helper initially swiped outside the centered scroll container; targeting the actual scroll bounds completed the capture without product changes.
 - Evidence: ignored `build/evidence/updater-*.log`, `updater-native-result.json`, `updater-native-*.png/xml/txt` and update-state captures. The initial TDD compile failure is recorded in `updater-red.log`.
-- At the end of feature verification, **1.3.4 had not yet been installed on physical RS38/HyperOS devices or published as a GitHub Release**. See the [v1.3.4 Release](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.4) for subsequent publication/deployment evidence. OEM/MDM installation restrictions, API 33/37 updater runtime, low-storage installation failure and full upgrade to a future real public Release remain unverified. Updating can stop the app/service; finish jobs before installation.
+- At the end of feature verification, **1.3.4 had not yet been installed on physical RS38/HyperOS devices or published as a GitHub Release**. See the [v1.3.4 Release](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.4) for subsequent publication/deployment evidence. At that point, OEM/MDM installation restrictions, API 33/37 updater runtime, low-storage installation failure and full upgrade to a future real public Release were unverified. The later physical-device report for the public 1.3.5 update is recorded above, with its own scope. Updating can stop the app/service; finish jobs before installation.
 
 ## Per-printer settings navigation — 1.3.3 (2026-10-15)
 
