@@ -9,15 +9,24 @@ import java.util.concurrent.*;
 
 /** Regenerates the diagnostic when system Print changes media or orientation. */
 public final class TestPrintAdapter extends PrintDocumentAdapter {
-    private final File directory;private final String host;
+    private final File directory;private final String host;private final PaperSize initialPaper;
     private final ExecutorService worker=Executors.newSingleThreadExecutor();
     private final List<File> owned=new ArrayList<>();
     private final Object lock=new Object();
     private Cancellation active;private File current;private boolean closed;private int generation;
-    public TestPrintAdapter(File directory,String host) {this.directory=directory;this.host=host;}
+    public TestPrintAdapter(File directory,String host) {this(directory,host,PaperSize.LABEL);}
+    public TestPrintAdapter(File directory,String host,PaperSize initialPaper) {
+        this.directory=directory;this.host=host;this.initialPaper=Objects.requireNonNull(initialPaper);
+    }
     @Override public void onLayout(PrintAttributes oldAttrs,PrintAttributes attrs,CancellationSignal signal,LayoutResultCallback callback,Bundle extras) {
         final PaperSize paper;final boolean rotate;
-        try {paper=PaperSettings.fromMedia(attrs.getMediaSize());rotate=PaperSettings.rotated(paper,attrs.getMediaSize());}
+        try {
+            PrintAttributes.MediaSize media=attrs.getMediaSize();
+            // Android may request a generic Letter preview before selecting a printer.
+            // Keep that preview usable; the service validates the actual queued TSC media.
+            if(media==null || !media.getId().startsWith("TSC_")) {paper=initialPaper;rotate=false;}
+            else {paper=PaperSettings.fromMedia(media);rotate=PaperSettings.rotated(paper,media);}
+        }
         catch(IllegalArgumentException e){callback.onLayoutFailed(e.getMessage());return;}
         Cancellation cancel=new Cancellation();final int request;
         synchronized(lock) {

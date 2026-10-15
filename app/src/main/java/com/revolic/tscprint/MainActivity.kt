@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
         status = ""; statusError = false
         try {
             getSystemService(PrintManager::class.java).print("TSC Print Test",
-                TestPrintAdapter(PrintFiles.directory(this), host), printAttributes(paper))
+                TestPrintAdapter(PrintFiles.directory(this), host, paper), printAttributes(paper))
         } catch (e: Exception) { statusError = true; status = "เปิดเมนู Print ไม่ได้: ${e.message}" }
     }
     private fun printAttributes(selectedPaper: PaperSize): PrintAttributes = PrintAttributes.Builder()

@@ -6,6 +6,12 @@
 - Make the IP settings instrumentation test wait for the save acknowledgment before checking persisted state.
 - Write release checksum entries with portable filenames so downloaded assets can be verified together.
 
+## 1.2.1 — 2026-10-15
+
+- แก้ Print Test บน RS38 / Android 13 ที่เริ่มด้วยกระดาษ Letter ชั่วคราวแล้วตัวอย่างว่างและไม่มีปุ่มพิมพ์หลังเลือก TSC
+- สร้างตัวอย่างแรกตามขนาดที่เลือกในแอป แล้วสร้างใหม่ตามกระดาษ TSC ในหน้าต่าง Print พร้อมคงการตรวจขนาดก่อนส่งงานจริง
+- เพิ่ม regression test เปิด Android Print ด้วย Letter และตรวจว่ามีตัวอย่าง 1 หน้าโดยไม่ส่งพิมพ์
+
 ## 1.2.0 — 2026-10-14
 
 - เพิ่ม preset 148 × 210 มม. (A5) พร้อมขนาดเดิม 102 × 76 มม.

@@ -4,7 +4,7 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.plugin.compose
 android {
  namespace = "com.revolic.tscprint"
  compileSdk = 37
- defaultConfig { applicationId = "com.revolic.tscprint"; minSdk = 33; targetSdk = 37; versionCode = 3; versionName = "1.2.0"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+ defaultConfig { applicationId = "com.revolic.tscprint"; minSdk = 33; targetSdk = 37; versionCode = 4; versionName = "1.2.1"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
  buildFeatures { compose = true; buildConfig = true }
  compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
  val signingPath = System.getenv("TSC_SIGNING_PROPERTIES")

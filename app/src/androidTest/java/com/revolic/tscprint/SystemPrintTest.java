@@ -28,6 +28,24 @@ public class SystemPrintTest {
             assertTrue(device.wait(Until.hasObject(By.text(enabled?"บริการพิมพ์เปิดอยู่":"ยังไม่ได้เปิดบริการพิมพ์")),5000));
         }
     }
+    /** RS38 starts with provisional Letter media before a TSC printer is selected. */
+    @Test public void genericInitialMediaStillProducesOnePagePreview() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<PrintJob> job=new java.util.concurrent.atomic.AtomicReference<>();
+        try(ActivityScenario<MainActivity> scene=ActivityScenario.launch(MainActivity.class)) {
+            scene.onActivity(activity->{
+                PrintAttributes attrs=new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.NA_LETTER)
+                    .setResolution(new PrintAttributes.Resolution("preview","Preview",300,300))
+                    .setMinMargins(PrintAttributes.Margins.NO_MARGINS).setColorMode(PrintAttributes.COLOR_MODE_MONOCHROME).build();
+                job.set(activity.getSystemService(PrintManager.class).print("TSC provisional preview",
+                    new TestPrintAdapter(PrintFiles.directory(context),"127.0.0.1"),attrs));
+            });
+            device.wait(Until.findObject(By.res(spooler,"destination_spinner")),10000).click();
+            device.wait(Until.findObject(By.text("Save as PDF")),5000).click();
+            assertTrue("Provisional Letter must not block diagnostic preview",
+                device.wait(Until.hasObject(By.res(spooler,"page_number").text("1/1")),10000));
+            assertEquals(PrintJobInfo.STATE_CREATED,job.get().getInfo().getState());
+        } finally {if(job.get()!=null)job.get().cancel();device.pressBack();}
+    }
     @Test public void systemPrintDispatchesPdfToLocalSocket() throws Exception { runPrint(false,false); }
     @Test public void selectedPagesAndCopiesReachSocketInOrder() throws Exception { runPrint(true,false); }
     @Test public void printTestScreenRequiresConfirmationAndSendsOneLabel() throws Exception { runPrint(false,true); }
