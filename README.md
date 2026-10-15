@@ -4,22 +4,24 @@
 
 An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP 9100, with multiple named printers, print tests and custom paper sizes. [English guide](docs/README.en.md).
 
-**เวอร์ชันซอร์สปัจจุบัน: 1.3.4** — เพิ่มตรวจสอบและดาวน์โหลดอัปเดตจาก GitHub Releases ในหน้า ตั้งค่า ดูรายละเอียดที่ [Changelog](CHANGELOG.md#134--2026-10-15)
+**เวอร์ชันที่เผยแพร่: [1.3.4](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.4)** — เพิ่มตรวจสอบและดาวน์โหลดอัปเดตจาก GitHub Releases ในหน้า ตั้งค่า ดูรายละเอียดที่ [Changelog](CHANGELOG.md#134--2026-10-15)
 
 [![Android 13+](https://img.shields.io/badge/Android-13%2B-245B48)](app/src/main/AndroidManifest.xml)
 [![MIT License](https://img.shields.io/badge/License-MIT-245B48)](LICENSE)
 [![Android build](https://github.com/FlintsLabs/tsc-android-print/actions/workflows/android.yml/badge.svg)](https://github.com/FlintsLabs/tsc-android-print/actions/workflows/android.yml)
 
-**[ดาวน์โหลด APK](https://github.com/FlintsLabs/tsc-android-print/releases/latest)** · [ติดตั้ง](#ติดตั้งและเริ่มใช้งาน) · [แก้ปัญหา](docs/troubleshooting.md) · [Build](docs/building.md) · [Changelog](CHANGELOG.md)
+**[ดาวน์โหลด APK 1.3.4](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.4/TSC-Direct-Print-1.3.4.apk)** · [SHA256SUMS.txt](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.4/SHA256SUMS.txt) · [ติดตั้ง](#ติดตั้งและเริ่มใช้งาน) · [แก้ปัญหา](docs/troubleshooting.md) · [Build](docs/building.md) · [Changelog](CHANGELOG.md)
 
 <p align="center">
-  <img src="docs/images/print.png" width="250" alt="หน้าพิมพ์ PDF" />
-  <img src="docs/images/print-test.png" width="250" alt="หน้า Print Test พร้อมตัวอย่างฉลาก" />
-  <img src="docs/images/settings.png" width="250" alt="รายการเครื่องพิมพ์ แตะเพื่อเปิดตั้งค่ารายเครื่อง" />
-  <img src="docs/images/settings-detail.png" width="250" alt="หน้าตั้งค่ารายเครื่อง แก้ไข IP พอร์ตและกระดาษเริ่มต้น" />
+  <img src="docs/images/print.png" width="235" alt="1.3.4: หน้าพิมพ์ PDF พร้อมเลือกเครื่องพิมพ์และกระดาษ" />
+  <img src="docs/images/print-test.png" width="235" alt="1.3.4: หน้า Print Test พร้อมตัวอย่างฉลาก" />
+  <img src="docs/images/settings.png" width="235" alt="1.3.4: รายการเครื่องพิมพ์พร้อมกระดาษเริ่มต้นแยกต่อเครื่อง" />
+  <img src="docs/images/settings-detail.png" width="235" alt="1.3.4: หน้าตั้งค่ารายเครื่อง แก้ไขชื่อ IP พอร์ตและกระดาษ" />
+  <img src="docs/images/custom-paper.png" width="235" alt="1.3.4: กรอกขนาดกระดาษเองเป็นมิลลิเมตร" />
+  <img src="docs/images/app-update.png" width="235" alt="1.3.4: ตรวจสอบเวอร์ชันล่าสุดจาก GitHub Releases ในแอป" />
 </p>
 
-ภาพหน้า Print / Print Test จาก 1.2.0 และหน้ารายการ / ตั้งค่ารายเครื่องจาก 1.3.3 บน Android emulator; IP ในภาพเป็นตัวอย่าง ต้องตั้งให้ตรงกับเครื่องพิมพ์ของคุณ ภาพ system Print ใช้ loopback receiver สำหรับ preview
+ภาพชุดนี้จับจาก **APK Release 1.3.4 บน Android 16 / API 36 Emulator** ใช้ปลายทางจำลอง `127.0.0.1` / `127.0.0.2` เพื่อแสดงหลายเครื่องและกระดาษเริ่มต้นต่างกัน ต้องเปลี่ยนเป็น IP จริงของคุณ ภาพ Android Print เป็น preview ผ่านตัวรับจำลอง และไม่มีการพิมพ์ฉลากจริงระหว่างจับภาพ ดู [รายละเอียดภาพ](docs/images/README.md)
 
 ## ใหม่ใน 1.3.4
 
@@ -58,7 +60,7 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 
 1. ดาวน์โหลด `TSC-Direct-Print-<version>.apk` จาก **[Releases](https://github.com/FlintsLabs/tsc-android-print/releases/latest)**
 2. เปิด APK บน Android 13+ และอนุญาตติดตั้งจากแอปที่เปิดไฟล์เมื่อ Android ขอ
-3. เปิด **TSC Direct Print → ตั้งค่า → แตะชื่อเครื่องพิมพ์** กรอกชื่อ / IPv4 / พอร์ต / กระดาษเริ่มต้น แล้วกด **บันทึกเครื่องพิมพ์** ค่าเดิม `192.168.70.37:9100` จะถูกเก็บไว้เมื่ออัปเดต
+3. เปิด **TSC Direct Print → ตั้งค่า → แตะชื่อเครื่องพิมพ์** กรอกชื่อ / IPv4 / พอร์ต / กระดาษเริ่มต้น แล้วกด **บันทึกเครื่องพิมพ์** การติดตั้งใหม่มีค่าเริ่มต้น `192.168.70.37:9100`; การอัปเดตทับเก็บค่าที่คุณบันทึกไว้
 4. แตะชื่อเครื่องอีกครั้งแล้วกด **ตรวจการเชื่อมต่อ** เพื่อตรวจ IP/พอร์ตของเครื่องในหน้ารายละเอียด โดยยังไม่ส่งฉลาก
 5. กลับ **รายการเครื่องพิมพ์ → จัดการบริการพิมพ์** แล้วเปิด **TSC Direct Print** ในหน้าการพิมพ์ของ Android
 6. เลือกเครื่องและขนาดในหน้า **พิมพ์ / Print Test** ให้ตรงกับฉลาก แล้วเปิดเอกสารและกด **Print → ชื่อเครื่องพิมพ์ที่บันทึก**
@@ -66,7 +68,7 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 
 อนุญาตสิทธิ์เครือข่ายภายในเมื่อ Android รุ่นที่ใช้งานขอ ชื่อเมนูระบบอาจต่างกันตามยี่ห้อ
 
-ตรวจหมายเลขเวอร์ชันของ APK ใน Releases ก่อนดาวน์โหลด หากยังไม่มี 1.3.4 ให้ [build จากซอร์ส](docs/building.md) การ push ซอร์สขึ้น GitHub ไม่ได้อัปโหลด APK เป็น Release อัตโนมัติ
+มี [Release 1.3.4](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.4) พร้อม APK และ checksum แล้ว ตรวจไฟล์ก่อนติดตั้งบน macOS ด้วย `shasum -a 256 -c SHA256SUMS.txt` โดยวางสองไฟล์ในโฟลเดอร์เดียวกัน การ push ซอร์สอย่างเดียวไม่เผยแพร่ APK อัตโนมัติ
 
 ไม่ต้องเพิ่ม IP ผ่าน **System / Default Print Service → Add printer by IP**: ให้เลือกบริการ **TSC Direct Print** ที่ติดตั้งจาก APK นี้
 
@@ -83,6 +85,8 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 ## หลายเครื่องพิมพ์
 
 เพิ่มเครื่องที่ **ตั้งค่า → เพิ่มเครื่องพิมพ์** กรอกชื่อ, IPv4, พอร์ต (ปกติ 9100) และกระดาษเริ่มต้น บันทึกได้ 20 เครื่อง โดย IP+พอร์ตต้องไม่ซ้ำกัน ตั้งแต่ 1.3.3 หน้า Settings แสดงรายการ **เครื่องพิมพ์ที่บันทึก** พร้อมชื่อ IP/พอร์ต กระดาษเริ่มต้น และลูกศรเข้าไปตั้งค่ารายเครื่อง การเปิดหรือบันทึกค่าเครื่องอื่นไม่เปลี่ยนเครื่องที่เลือกพิมพ์ไว้ ส่วนหน้า **พิมพ์** และ **Print Test** เลือกจากช่อง **เลือกเครื่องพิมพ์** ที่มีลูกศรลง ค่าเริ่มต้นกระดาษแยกกันในแต่ละเครื่อง และขนาดกระดาษที่เพิ่มเองใช้ร่วมกันได้
+
+<img src="docs/images/printer-selector.png" width="300" alt="เมนูเลือกเครื่องพิมพ์ 2 เครื่อง พร้อมแสดง IP และขนาดกระดาษของแต่ละเครื่อง" />
 
 **หน้าต่าง Print ของ Android เป็นผู้เลือกปลายทางจริง** ระบบอาจจำเครื่องจากงานก่อน จึงต้องเลือก/ตรวจชื่อและ IP อีกครั้งก่อนยืนยัน การเลือกในแอปโหลดค่าเริ่มต้นของเครื่องนั้น แต่ไม่ได้บังคับปลายทางของหน้าต่าง Android ส่วนปุ่มตรวจการเชื่อมต่อและพิมพ์ทดสอบในหน้ารายละเอียดใช้ค่าที่บันทึกไว้ของเครื่องที่กำลังดู
 
@@ -141,13 +145,19 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 
 ## อัปเดตแอป
 
-ตั้งแต่ 1.3.4 เปิด **ตั้งค่า → อัปเดตแอป → ตรวจสอบอัปเดต** แล้วดาวน์โหลดรุ่นใหม่ เมื่อ Android ขอให้อนุญาตติดตั้งจากแอปนี้ ให้เปิดสิทธิ์ กลับแอป แล้วกด **ติดตั้งอัปเดต** และยืนยัน **อัปเดต** ในหน้าต่างระบบ รอให้งานพิมพ์จบก่อนติดตั้ง ไม่ต้องถอนแอปเดิมหรือใช้ ADB สำหรับการอัปเดตรอบถัดไป
+ติดตั้ง **1.3.4 ขึ้นไปครั้งแรก** ผ่าน APK หรือ ADB ก่อน แล้วรุ่นถัดไปอัปเดตจากมือถือได้:
 
-การตรวจ/ดาวน์โหลดต้องใช้อินเทอร์เน็ตไป GitHub ส่วนการพิมพ์ยังส่งตรงภายใน LAN ตามเดิม ดู [วิธีอัปเดตและแก้ปัญหา](docs/updating.md)
+1. รอให้งานพิมพ์เสร็จ เปิด **ตั้งค่า** แล้วเลื่อนลงไปที่ **อัปเดตแอป**
+2. กด **ตรวจสอบอัปเดต** หากมีรุ่นใหม่ ให้กด **ดาวน์โหลด <version>**
+3. รอแอปตรวจ SHA-256, package, version และลายเซ็นให้ตรงกับแอปเดิม
+4. ครั้งแรกกด **อนุญาตติดตั้งจากแอปนี้** เปิดสิทธิ์ใน Android แล้วกลับแอป
+5. กด **ติดตั้งอัปเดต** และยืนยัน **อัปเดต / Update** ในหน้าต่าง Android
+
+เก็บข้อมูลเครื่องพิมพ์และกระดาษเดิมโดยไม่ถอนแอป การตรวจ/ดาวน์โหลดต้องใช้อินเทอร์เน็ตไป GitHub ส่วนการพิมพ์ยังส่งตรงภายใน LAN ตามเดิม เมื่อรุ่นที่ติดตั้งเท่ากับ GitHub Latest จะไม่เสนอให้ดาวน์โหลดซ้ำ ดู [คู่มือและการแก้ปัญหาอัปเดต](docs/updating.md)
 
 ## สำหรับผู้พัฒนา
 
-ใช้ **JDK 21**, **Android SDK Platform 37**, **Build Tools 36.0.0** และ Gradle wrapper ที่รวมไว้
+ใช้ **Python 3**, **JDK 21**, **Android SDK Platform 37**, **Build Tools 36.0.0** และ Gradle wrapper ที่รวมไว้
 
 ```sh
 git clone https://github.com/FlintsLabs/tsc-android-print.git

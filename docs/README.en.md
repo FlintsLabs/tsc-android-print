@@ -4,11 +4,21 @@
 
 An independent Android Print Service for **TSC MH261T, 203 DPI**. It converts PDF pages to monochrome TSPL bitmaps and sends them directly over **configurable TCP endpoints (default 9100)**. A Mac, USB cable or print server is not needed. The UI is currently Thai, with light/dark themes and adaptive navigation.
 
-**Current source version: 1.3.4 (versionCode 9).** Settings now includes manual GitHub Release checks, APK download and verified native installation. See the [changelog](../CHANGELOG.md) and [verification](verification.md). A source push does not automatically publish an APK.
+**Published version: [1.3.4 (versionCode 9)](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.4).** Settings now includes manual GitHub Release checks, APK download and verified native installation. See the [changelog](../CHANGELOG.md) and [verification](verification.md). A source push does not automatically publish an APK.
+
+[Download APK 1.3.4](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.4/TSC-Direct-Print-1.3.4.apk) · [SHA256SUMS.txt](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.4/SHA256SUMS.txt)
+
+<p align="center">
+  <img src="images/print.png" width="235" alt="1.3.4: Print screen with printer and paper selection" />
+  <img src="images/settings.png" width="235" alt="1.3.4: Saved printers with independent paper defaults" />
+  <img src="images/app-update.png" width="235" alt="1.3.4: Manual GitHub Release update check" />
+</p>
+
+Screenshots show the signed 1.3.4 Release APK on an Android 16 / API 36 emulator. Loopback IPs are demonstration endpoints; replace them with actual printer IPs. Android Print images show a loopback preview, with no physical print submitted. See the [full screenshot set](../README.md) and [capture details](images/README.md).
 
 ## Install and connect
 
-1. Download `TSC-Direct-Print-<version>.apk` from Releases and install it on **Android 13+**. Allow installation from the app opening the file when Android requests it.
+1. Download the APK and checksum from the same Release. On macOS, verify with `shasum -a 256 -c SHA256SUMS.txt`, then install on **Android 13+**. Allow installation from the app opening the file when Android requests it.
 2. Open **ตั้งค่า → แตะชื่อเครื่องพิมพ์** (Settings → tap the printer row), enter its name, IPv4, port and default paper, then press **บันทึกเครื่องพิมพ์** (Save printer). Replace the bundled default 192.168.70.37 with your own printer address.
 3. Open that printer's row again and press **ตรวจการเชื่อมต่อ** (Check connection). This checks the saved viewed endpoint without printing.
 4. Return to **รายการเครื่องพิมพ์** (Printer list), press **จัดการบริการพิมพ์** (Manage print services) and turn **TSC Direct Print** on in Android Settings.
