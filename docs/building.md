@@ -1,6 +1,6 @@
 # Build and test
 
-Requirements: **JDK 21**, Android SDK **platforms;android-37.0**, **build-tools;36.0.0**. The repository pins Gradle **9.5.1**, Android Gradle Plugin **9.2.1** and Compose compiler plugin **2.3.21**. Java source compatibility is 17.
+Requirements: **Python 3** (test APK fixtures used by instrumentation/lint), **JDK 21**, Android SDK **platforms;android-37.0**, **build-tools;36.0.0**. The repository pins Gradle **9.5.1**, Android Gradle Plugin **9.2.1** and Compose compiler plugin **2.3.21**. Java source compatibility is 17.
 
 Install the SDK packages through Android Studio or sdkmanager and review/accept their required licenses. Set JAVA_HOME and ANDROID_HOME for your installation, or add `sdk.dir=/path/to/android-sdk` to an untracked local.properties.
 
@@ -37,6 +37,14 @@ adb -s emulator-5554 shell settings put global animator_duration_scale 0
 ```
 
 Tests drive the real Android Print dialog and send only to local receivers at `127.0.0.1:9100` and `127.0.0.2:9101`. They do not print physical labels. Keep UI automation serialized; concurrent uiautomator dumps can conflict with instrumentation's accessibility connection.
+
+Updater tests generate tiny debug-signed APK fixtures through `scripts/generate-update-fixtures.py`; they are included only in the test APK. Do not run tests on operational phones. To opt in to an actual public Release download over Android HTTPS (no installation):
+
+```sh
+adb -s emulator-5554 shell am instrument -w -e liveGithub true \
+  -e class com.revolic.tscprint.GitHubUpdateLiveTest \
+  com.revolic.tscprint.test/androidx.test.runner.AndroidJUnitRunner
+```
 
 ## Signed release
 

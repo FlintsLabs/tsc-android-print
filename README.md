@@ -4,7 +4,7 @@
 
 An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP 9100, with multiple named printers, print tests and custom paper sizes. [English guide](docs/README.en.md).
 
-**เวอร์ชันซอร์สปัจจุบัน: 1.3.3** — แตะรายการเพื่อตั้งค่ารายเครื่อง และเลือกเครื่องที่จะพิมพ์ในหน้า Print / Print Test ดูรายละเอียดที่ [Changelog](CHANGELOG.md#133--2026-10-15)
+**เวอร์ชันซอร์สปัจจุบัน: 1.3.4** — เพิ่มตรวจสอบและดาวน์โหลดอัปเดตจาก GitHub Releases ในหน้า ตั้งค่า ดูรายละเอียดที่ [Changelog](CHANGELOG.md#134--2026-10-15)
 
 [![Android 13+](https://img.shields.io/badge/Android-13%2B-245B48)](app/src/main/AndroidManifest.xml)
 [![MIT License](https://img.shields.io/badge/License-MIT-245B48)](LICENSE)
@@ -21,12 +21,12 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 
 ภาพหน้า Print / Print Test จาก 1.2.0 และหน้ารายการ / ตั้งค่ารายเครื่องจาก 1.3.3 บน Android emulator; IP ในภาพเป็นตัวอย่าง ต้องตั้งให้ตรงกับเครื่องพิมพ์ของคุณ ภาพ system Print ใช้ loopback receiver สำหรับ preview
 
-## ใหม่ใน 1.3.3
+## ใหม่ใน 1.3.4
 
-- **ตั้งค่า → แตะชื่อเครื่องพิมพ์** เพื่อแก้ชื่อ, IP, พอร์ต และกระดาษเริ่มต้น พร้อมตรวจการเชื่อมต่อ พิมพ์ทดสอบ และลบเครื่อง
-- เปิด แก้ไข หรือเพิ่มเครื่องอื่นได้โดยคงเครื่องที่เลือกพิมพ์ไว้ เลือกปลายทางในแอปจากหน้า **พิมพ์ / Print Test**
-- ขนาดกระดาษในฟอร์มมีผลเมื่อกด **บันทึกเครื่องพิมพ์**; หากยังมีค่าที่ไม่บันทึก ปุ่มตรวจ/ทดสอบจะไม่ทำงาน
-- อัปเดตทับรุ่นเดิมด้วย APK ที่ลงลายเซ็นเดียวกันเพื่อเก็บข้อมูลเดิม ดู [ผลทดสอบและข้อจำกัด](docs/verification.md)
+- **ตั้งค่า → อัปเดตแอป → ตรวจสอบอัปเดต** ตรวจรุ่นปกติล่าสุดบน GitHub เมื่อกดปุ่ม
+- ดาวน์โหลด APK พร้อมแสดงความคืบหน้าและยกเลิกได้ ตรวจ SHA-256, ชื่อแพ็กเกจ เวอร์ชัน และลายเซ็นให้ตรงกับแอปเดิม
+- อนุญาตติดตั้งจาก TSC Direct Print ครั้งแรก แล้วกดติดตั้งและยืนยันในหน้าต่าง Android ข้อมูลเครื่องพิมพ์และกระดาษเดิมยังอยู่
+- ต้องลง **1.3.4 ขึ้นไปครั้งแรกด้วยตนเอง** ก่อนใช้ปุ่มนี้สำหรับรุ่นถัดไป ดู [วิธีอัปเดต](docs/updating.md) และ [ผลทดสอบ](docs/verification.md)
 
 ## ความสามารถ
 
@@ -37,6 +37,7 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 - Preset **102 × 76 มม.** และ **148 × 210 มม. (A5)** พร้อมเพิ่มขนาดเอง
 - **Print Test** มีกรอบ 4 ด้าน เส้นวัด QR และข้อความสีขาวบนพื้นดำ
 - เลือกหน้า จำนวนสำเนา และแนวกระดาษจากหน้าพิมพ์ของระบบ
+- ตรวจสอบ ดาวน์โหลด และเปิดตัวติดตั้งอัปเดตจาก GitHub Releases ได้ในแอป
 - UI ภาษาไทย ธีมสว่าง/มืด และ navigation rail สำหรับจอกว้าง
 
 ไม่ต้องใช้ Mac, USB หรือ print server เป็นตัวกลาง ไม่มี telemetry และไม่ส่งเอกสารไป cloud
@@ -65,7 +66,7 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 
 อนุญาตสิทธิ์เครือข่ายภายในเมื่อ Android รุ่นที่ใช้งานขอ ชื่อเมนูระบบอาจต่างกันตามยี่ห้อ
 
-ตรวจหมายเลขเวอร์ชันของ APK ใน Releases ก่อนดาวน์โหลด หากยังไม่มี 1.3.3 ให้ [build จากซอร์ส](docs/building.md) การ push ซอร์สขึ้น GitHub ไม่ได้อัปโหลด APK เป็น Release อัตโนมัติ
+ตรวจหมายเลขเวอร์ชันของ APK ใน Releases ก่อนดาวน์โหลด หากยังไม่มี 1.3.4 ให้ [build จากซอร์ส](docs/building.md) การ push ซอร์สขึ้น GitHub ไม่ได้อัปโหลด APK เป็น Release อัตโนมัติ
 
 ไม่ต้องเพิ่ม IP ผ่าน **System / Default Print Service → Add printer by IP**: ให้เลือกบริการ **TSC Direct Print** ที่ติดตั้งจาก APK นี้
 
@@ -137,6 +138,12 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 ตรวจ **ตั้งค่า → แตะชื่อเครื่องพิมพ์ → ตรวจการเชื่อมต่อ** และเปิดบริการ **TSC Direct Print** หากเป็น Xiaomi / Redmi / HyperOS และพิมพ์ได้เฉพาะตอนเสียบ USB ให้ตรวจ **App info → Power → No restrictions**; เคสที่ทดสอบต้องรีสตาร์ต Android Print Spooler เพิ่มเติมก่อนพิมพ์งานใหม่ได้
 
 อ่าน **[Troubleshooting](docs/troubleshooting.md)** และ **[Verification](docs/verification.md)** สำหรับขั้นตอนและขอบเขตผลทดสอบ
+
+## อัปเดตแอป
+
+ตั้งแต่ 1.3.4 เปิด **ตั้งค่า → อัปเดตแอป → ตรวจสอบอัปเดต** แล้วดาวน์โหลดรุ่นใหม่ เมื่อ Android ขอให้อนุญาตติดตั้งจากแอปนี้ ให้เปิดสิทธิ์ กลับแอป แล้วกด **ติดตั้งอัปเดต** และยืนยัน **อัปเดต** ในหน้าต่างระบบ รอให้งานพิมพ์จบก่อนติดตั้ง ไม่ต้องถอนแอปเดิมหรือใช้ ADB สำหรับการอัปเดตรอบถัดไป
+
+การตรวจ/ดาวน์โหลดต้องใช้อินเทอร์เน็ตไป GitHub ส่วนการพิมพ์ยังส่งตรงภายใน LAN ตามเดิม ดู [วิธีอัปเดตและแก้ปัญหา](docs/updating.md)
 
 ## สำหรับผู้พัฒนา
 

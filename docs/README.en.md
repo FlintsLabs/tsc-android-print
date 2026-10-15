@@ -4,7 +4,7 @@
 
 An independent Android Print Service for **TSC MH261T, 203 DPI**. It converts PDF pages to monochrome TSPL bitmaps and sends them directly over **configurable TCP endpoints (default 9100)**. A Mac, USB cable or print server is not needed. The UI is currently Thai, with light/dark themes and adaptive navigation.
 
-**Current source version: 1.3.3 (versionCode 8).** Settings rows open individual printer details; Print / Print Test select the printer used in the app. See the [changelog](../CHANGELOG.md) and [verification](verification.md). Check the APK version on Releases before downloading; if 1.3.3 is not listed, [build from source](building.md). A source push does not automatically publish a release APK.
+**Current source version: 1.3.4 (versionCode 9).** Settings now includes manual GitHub Release checks, APK download and verified native installation. See the [changelog](../CHANGELOG.md) and [verification](verification.md). A source push does not automatically publish an APK.
 
 ## Install and connect
 
@@ -61,6 +61,12 @@ Opening preview does not print. The README label image is rendered output, not a
 On Xiaomi/Redmi/HyperOS, printing that works only while USB is attached may involve app freezing. Check **App info → Power → No restrictions**. The observed Redmi case also required restarting Android Print Spooler, closing the old dialog and creating a new job. A fresh web job was then user-confirmed to print without USB. This is observed recovery, not an OEM-wide guarantee; see [troubleshooting](troubleshooting.md).
 
 Missing backgrounds in the source PDF must be corrected in the originating website's print CSS/PDF generation. The service cannot recover omitted content.
+
+## Update in the app
+
+After installing 1.3.4 or newer once, open **ตั้งค่า → อัปเดตแอป → ตรวจสอบอัปเดต** (Settings → App updates → Check for updates). Download the newer stable release. The app verifies SHA-256, package, version and signing certificate, then asks you to allow installations from TSC Direct Print. Return to the app, tap Install update, and confirm Android's installer. Wait for print jobs to finish first. Updating with the same signing key retains printer profiles and paper settings; do not uninstall the existing app.
+
+Checking/downloading needs Internet access to GitHub. Printing continues directly over the LAN. There are no automatic background checks or silent installs. See [update details and recovery](updating.md).
 
 ## Development / license
 

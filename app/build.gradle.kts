@@ -4,7 +4,7 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.plugin.compose
 android {
  namespace = "com.revolic.tscprint"
  compileSdk = 37
- defaultConfig { applicationId = "com.revolic.tscprint"; minSdk = 33; targetSdk = 37; versionCode = 8; versionName = "1.3.3"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+ defaultConfig { applicationId = "com.revolic.tscprint"; minSdk = 33; targetSdk = 37; versionCode = 9; versionName = "1.3.4"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
  buildFeatures { compose = true; buildConfig = true }
  testOptions { animationsDisabled = true }
  compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
@@ -15,7 +15,20 @@ android {
   buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("localRelease") } }
  }
  lint { abortOnError = true }
+ sourceSets.getByName("androidTest").assets.srcDir(layout.buildDirectory.dir("update-fixtures").get().asFile)
 }
+val updateFixtures = tasks.register<Exec>("generateUpdateFixtures") {
+ dependsOn("validateSigningDebug")
+ inputs.file(rootProject.file("scripts/generate-update-fixtures.py"))
+ inputs.file(android.signingConfigs.getByName("debug").storeFile!!)
+ outputs.dir(layout.buildDirectory.dir("update-fixtures"))
+ doFirst {
+  val sdk = System.getenv("ANDROID_HOME") ?: Properties().apply { rootProject.file("local.properties").inputStream().use { load(it) } }.getProperty("sdk.dir")
+  commandLine("python3", rootProject.file("scripts/generate-update-fixtures.py").absolutePath, sdk, System.getProperty("java.home"),
+      android.signingConfigs.getByName("debug").storeFile!!.absolutePath, layout.buildDirectory.dir("update-fixtures").get().asFile.absolutePath)
+ }
+}
+tasks.matching { it.name == "mergeDebugAndroidTestAssets" || it.name == "generateDebugAndroidTestLintModel" || it.name == "lintAnalyzeDebugAndroidTest" }.configureEach { dependsOn(updateFixtures) }
 dependencies {
  implementation(project(":core"))
  implementation("com.google.zxing:core:3.5.4")

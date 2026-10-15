@@ -14,6 +14,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
+import androidx.lifecycle.ViewModelProvider
 import com.revolic.tscprint.core.PaperSize
 import com.revolic.tscprint.core.PrinterProfile
 import com.revolic.tscprint.core.Cancellation
@@ -34,6 +35,8 @@ class MainActivity : ComponentActivity() {
     private var busy by mutableStateOf(false)
     private var serviceEnabled by mutableStateOf(false)
     private var networkAllowed by mutableStateOf(false)
+    private var canInstallUpdates by mutableStateOf(false)
+    private val updates by lazy { ViewModelProvider(this)[UpdateViewModel::class.java] }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         statusError = !granted
         networkAllowed = granted
@@ -51,6 +54,16 @@ class MainActivity : ComponentActivity() {
             return
         }
         setContent {
+            val updater = updates
+            LaunchedEffect(updater.installRequest) {
+                val file = updater.installRequest ?: return@LaunchedEffect
+                updater.consumeInstallRequest()
+                try {
+                    canInstallUpdates = packageManager.canRequestPackageInstalls()
+                    if (canInstallUpdates) startActivity(UpdateInstaller.intent(this@MainActivity, file))
+                    else updater.installError()
+                } catch (_: Exception) { updater.installError() }
+            }
             PrintApp(printer, printers, serviceEnabled, networkAllowed, busy, status, statusError, paper, papers,
                 onSelectPaper = { selected ->
                     PaperSettings.select(this, selected); PrinterSettings.update(this, printer.withPaper(selected.id())); refreshPrinters()
@@ -83,11 +96,19 @@ class MainActivity : ComponentActivity() {
                 onPrintTest = { printTest(it) },
                 onServiceSettings = { startActivity(Intent(Settings.ACTION_PRINT_SETTINGS)) },
                 onRequestNetwork = { permission.launch(PrinterSettings.LAN_PERMISSION) },
-                onAppSettings = { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) })
+                onAppSettings = { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))) },
+                updateContent = {
+                    UpdatePanel(updater.state, canInstallUpdates, updater::check, updater::download, updater::prepareInstall,
+                        onAllowInstall = {
+                            try { startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))) }
+                            catch (_: Exception) { updater.installError() }
+                        }, onCancel = updater::cancel)
+                })
         }
     }
     override fun onResume() {
         super.onResume()
+        canInstallUpdates = packageManager.canRequestPackageInstalls()
         try { refreshPrinters() } catch (e: IllegalStateException) { statusError = true; status = e.message ?: "อ่านรายการเครื่องพิมพ์ไม่ได้" }
         networkAllowed = PrinterSettings.canUseNetwork(this)
         serviceEnabled = getSystemService(PrintManager::class.java).isPrintServiceEnabled(ComponentName(this, TscPrintService::class.java))

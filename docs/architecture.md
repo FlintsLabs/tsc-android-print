@@ -37,3 +37,9 @@ Pixels become 1-bit rows at threshold 128. Each label emits SIZE, DIRECTION 1,0,
 A completed send is not a hardware acknowledgment. Printer status polling and calibration are outside this implementation. Shift, Reference, sensors, ribbon, speed and density remain printer settings. Temporary jobs are private, cleaned on completion and swept at process startup.
 
 API 37 declares/requests local-network access; runtime acceptance currently covers API 36. No vendor driver, firmware or proprietary SDK is loaded. See [verification.md](verification.md).
+
+## Manual app updates
+
+`UpdateViewModel` owns a separate worker and explicit UI states. `GitHubReleaseClient` reads the anonymous latest Release API for `FlintsLabs/tsc-android-print`, accepts stable numeric tags and exact APK/checksum asset names, and follows bounded HTTPS redirects to GitHub download hosts. It enforces metadata/manifest/APK size limits and verifies SHA-256 while downloading. No printer data or documents are sent to GitHub.
+
+`UpdateInstaller` checks the downloaded file again, package name, version name/code, Android compatibility and current signer identity. Private `files/updates` storage and an atomic pending ticket permit local verification after process restart; the non-exported FileProvider grants the native installer temporary read access only to that directory. Android's installer performs installation/signature enforcement and requires user confirmation. The app does not install silently, automatically retry installation, modify printer preferences or check in the background. Installer launch failures and canceled installation leave a verified file available for retry. The user should finish print jobs before updating.

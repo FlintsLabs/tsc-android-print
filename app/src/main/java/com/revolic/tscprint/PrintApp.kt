@@ -35,7 +35,7 @@ fun PrintApp(printer: PrinterProfile, printers: List<PrinterProfile>, serviceEna
              onSelectPrinter: (String) -> Unit, onSavePrinter: (String?, String, String, Int, PaperSize) -> String?,
              onDeletePrinter: (String) -> String?, onProbe: (PrinterProfile) -> Unit, onClearFeedback: () -> Unit,
              onChoosePdf: () -> Unit, onPrintTest: (PrinterProfile) -> Unit, onServiceSettings: () -> Unit,
-             onRequestNetwork: () -> Unit, onAppSettings: () -> Unit) {
+             onRequestNetwork: () -> Unit, onAppSettings: () -> Unit, updateContent: @Composable () -> Unit) {
     var destination by rememberSaveable { mutableIntStateOf(0) }
     var settingsRoute by rememberSaveable { mutableStateOf("list") }
     fun openSettings(route: String) {
@@ -132,7 +132,7 @@ fun PrintApp(printer: PrinterProfile, printers: List<PrinterProfile>, serviceEna
                                     else -> SettingsPage(settingsRoute, { openSettings(it) }, printer, printers,
                                         serviceEnabled, networkAllowed, busy, status, statusError,
                                         onSavePrinter, onDeletePrinter, onProbe, onPrintTest,
-                                        onServiceSettings, onRequestNetwork, onAppSettings, paper, papers, onAddPaper)
+                                        onServiceSettings, onRequestNetwork, onAppSettings, paper, papers, onAddPaper, updateContent)
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
@@ -227,7 +227,7 @@ fun PrintApp(printer: PrinterProfile, printers: List<PrinterProfile>, serviceEna
                                     onDeletePrinter: (String) -> String?, onProbe: (PrinterProfile) -> Unit,
                                     onPrintTest: (PrinterProfile) -> Unit, onService: () -> Unit,
                                     onPermission: () -> Unit, onAppSettings: () -> Unit,
-                                    paper: PaperSize, papers: List<PaperSize>, onAddPaper: (PaperSize) -> String?) {
+                                    paper: PaperSize, papers: List<PaperSize>, onAddPaper: (PaperSize) -> String?, updateContent: @Composable () -> Unit) {
     if (route != "list") {
         val profile = printers.find { "printer:${it.id}" == route }
         TextButton(onClick = { onRoute("list") }, modifier = Modifier.heightIn(min = 48.dp)) {
@@ -255,6 +255,8 @@ fun PrintApp(printer: PrinterProfile, printers: List<PrinterProfile>, serviceEna
                 OutlinedButton(onClick = onService, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("จัดการบริการพิมพ์") }
             } else Requirements(serviceEnabled, networkAllowed, onService, onPermission, onAppSettings)
         }
+        HorizontalDivider()
+        updateContent()
         HorizontalDivider()
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("ฉลากและการจัดหน้า", style = MaterialTheme.typography.titleMedium)
