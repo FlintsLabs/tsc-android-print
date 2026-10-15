@@ -28,7 +28,15 @@ adb devices
 ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedDebugAndroidTest --console=plain
 ```
 
-Tests drive the real Android Print dialog and send only to a local receiver at `127.0.0.1:9100`. They do not print physical labels. Keep UI automation serialized; concurrent uiautomator dumps can conflict with instrumentation's accessibility connection.
+Gradle disables system animations during connected tests. When invoking the instrumentation runner directly, disable emulator animations first:
+
+```sh
+adb -s emulator-5554 shell settings put global window_animation_scale 0
+adb -s emulator-5554 shell settings put global transition_animation_scale 0
+adb -s emulator-5554 shell settings put global animator_duration_scale 0
+```
+
+Tests drive the real Android Print dialog and send only to local receivers at `127.0.0.1:9100` and `127.0.0.2:9101`. They do not print physical labels. Keep UI automation serialized; concurrent uiautomator dumps can conflict with instrumentation's accessibility connection.
 
 ## Signed release
 

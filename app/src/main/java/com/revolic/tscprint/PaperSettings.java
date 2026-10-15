@@ -26,12 +26,21 @@ public final class PaperSettings {
         preferences(context).edit().putString("selected",paper.id()).apply();
     }
     public static void addAndSelect(Context context,PaperSize paper) {
+        store(context,paper,true);
+    }
+    /** Save stock for a profile draft without changing the active print selection. */
+    public static void add(Context context,PaperSize paper) {
+        store(context,paper,false);
+    }
+    private static void store(Context context,PaperSize paper,boolean select) {
         Set<String> ids=new HashSet<>(preferences(context).getStringSet("custom",Collections.emptySet()));
         if(!paper.equals(PaperSize.LABEL) && !paper.equals(PaperSize.A5)) {
             if(!ids.contains(paper.id()) && ids.size()>=20)throw new IllegalArgumentException("บันทึกขนาดกำหนดเองได้สูงสุด 20 ขนาด");
             ids.add(paper.id());
         }
-        preferences(context).edit().putStringSet("custom",ids).putString("selected",paper.id()).apply();
+        SharedPreferences.Editor editor=preferences(context).edit().putStringSet("custom",ids);
+        if(select)editor.putString("selected",paper.id());
+        editor.apply();
     }
     public static PrintAttributes.MediaSize media(PaperSize paper) {
         return new PrintAttributes.MediaSize(paper.id(),paper.label(),paper.widthMils(),paper.heightMils());

@@ -2,37 +2,49 @@
 
 [ภาษาไทย / screenshots](../README.md) · [Download APK](https://github.com/FlintsLabs/tsc-android-print/releases/latest) · [Build](building.md) · [Verification](verification.md)
 
-An independent Android Print Service for **TSC MH261T, 203 DPI**. It converts PDF pages to monochrome TSPL bitmaps and sends them directly over **TCP 9100**. A Mac, USB cable or print server is not needed. The UI is currently Thai, with light/dark themes and adaptive navigation.
+An independent Android Print Service for **TSC MH261T, 203 DPI**. It converts PDF pages to monochrome TSPL bitmaps and sends them directly over **configurable TCP endpoints (default 9100)**. A Mac, USB cable or print server is not needed. The UI is currently Thai, with light/dark themes and adaptive navigation.
+
+**Current source version: 1.3.3 (versionCode 8).** Settings rows open individual printer details; Print / Print Test select the printer used in the app. See the [changelog](../CHANGELOG.md) and [verification](verification.md). Check the APK version on Releases before downloading; if 1.3.3 is not listed, [build from source](building.md). A source push does not automatically publish a release APK.
 
 ## Install and connect
 
-1. Download TSC-Direct-Print-1.2.0.apk from Releases and install it on **Android 13+**. Allow installation from the app opening the file when Android requests it.
-2. Open **ตั้งค่า** (Settings), enter your printer's IPv4 address, then press **บันทึก IP** (Save IP). Replace the bundled default 192.168.70.37 with your own printer address.
-3. Press **ตรวจการเชื่อมต่อ** (Check connection). This checks TCP 9100 without printing.
-4. Press **จัดการบริการพิมพ์** (Manage print services) and turn **TSC Direct Print** on in Android Settings.
+1. Download `TSC-Direct-Print-<version>.apk` from Releases and install it on **Android 13+**. Allow installation from the app opening the file when Android requests it.
+2. Open **ตั้งค่า → แตะชื่อเครื่องพิมพ์** (Settings → tap the printer row), enter its name, IPv4, port and default paper, then press **บันทึกเครื่องพิมพ์** (Save printer). Replace the bundled default 192.168.70.37 with your own printer address.
+3. Open that printer's row again and press **ตรวจการเชื่อมต่อ** (Check connection). This checks the saved viewed endpoint without printing.
+4. Return to **รายการเครื่องพิมพ์** (Printer list), press **จัดการบริการพิมพ์** (Manage print services) and turn **TSC Direct Print** on in Android Settings.
 5. Grant local-network access if Android requests it. The phone must reach the printer; guest Wi-Fi/client isolation may block it.
 
 Select the installed TSC service instead of adding an IP through Android's Default Print Service, which uses different protocols/discovery.
 
-For CipherLab RS38, see the [installation guide](rs38.md). The app requires Android 13+ and an available Android print framework; RS38 hardware/firmware has not been acceptance-tested.
+For CipherLab RS38, see the [installation guide](rs38.md). The app requires Android 13+ and an available Android print framework; one RS38 running Android 13 has physically printed with 1.2.1, but firmware variants still need verification.
 
 ## Print
 
-Use the normal **Print** action in a browser/PDF viewer that supports Android printing. Select TSC MH261T, review paper size, orientation, pages and copies, then confirm. To select a PDF directly, open **พิมพ์ → เลือก PDF เพื่อพิมพ์** (Print → Choose PDF). The same system dialog appears.
+Use the normal **Print** action in a browser/PDF viewer that supports Android printing. Select the saved printer name and IP, review paper size, orientation, pages and copies, then confirm. To select a PDF directly, open **พิมพ์ → เลือก PDF เพื่อพิมพ์** (Print → Choose PDF). The same system dialog appears.
 
 This service cannot add printing to a browser or WebView that does not provide it.
 
+## Multiple printers
+
+Save up to 20 printer profiles through **ตั้งค่า → เพิ่มเครื่องพิมพ์** (Settings → Add printer). Each profile has a name, IPv4, port and independent paper default; all use the 203 DPI TSPL pipeline. Since 1.3.3, Settings shows a navigable list with endpoints and paper defaults. Tap a row to open that printer's settings. Opening, editing or adding a profile keeps the current print selection. Print and Print Test share a compact selector with a down-chevron and printer count. Selection is an app preference, not an online status. Saved custom stock sizes are available across profiles. Duplicate IP+port pairs are rejected. Edit/delete through Settings; at least one profile must remain.
+
+**Android's Print dialog controls the actual destination.** It can remember a previous printer: select/review the intended name and IP again before confirmation. App selection restores defaults; it cannot programmatically override Android's printer choice. Probe and diagnostic actions in printer details use the saved viewed profile.
+
+Jobs retain an immutable endpoint when accepted by the service. Changing the app selection or editing profiles afterwards cannot redirect those jobs. Deleted/unknown IDs fail instead of falling back to another printer. Each endpoint is serial; different endpoints run on up to 3 workers, with 32 accepted jobs total. No broadcast printing or automatic retry is added. Existing 1.2.x settings migrate automatically, keeping the original printer ID.
+
 ## Paper sizes
 
-Presets: **102 × 76 mm** and **148 × 210 mm (A5)**. Add custom sizes through **ตั้งค่า → เพิ่มขนาดกระดาษเอง** (Settings → Add custom size), then **บันทึกและใช้ขนาดนี้** (Save and use).
+Set each printer's default through **ตั้งค่า → แตะชื่อเครื่องพิมพ์ → กระดาษเริ่มต้นของเครื่องนี้ → บันทึกเครื่องพิมพ์**. App paper changes are remembered for the selected profile; changes inside Android Print apply to that job. Android can remember previous job options, so review the final media before confirming.
+
+Presets: **102 × 76 mm** and **148 × 210 mm (A5)**. Add custom sizes through **ตั้งค่า → แตะชื่อเครื่องพิมพ์ → เพิ่มขนาดกระดาษเอง** (Settings → printer details → Add custom size), then **บันทึกและใช้ขนาดนี้** (Save and use) and **บันทึกเครื่องพิมพ์** (Save printer) to apply it to that profile. The details page also provides a targeted connection check and test-print action; save draft changes first. Android Print still requires destination review and confirmation.
 
 Width runs across the print head; height follows feed. App bounds: **20–168 mm wide**, **20–500 mm high**, one decimal place, up to **20 saved custom sizes**. These are app limits, not the printer's maximum label length.
 
-Sizes are shared by Print, Print Test and system Paper size. The final job's media selection is authoritative. For A5, keep physical 148 × 210 mm and change portrait/landscape separately. Match loaded stock and calibrate the printer sensor when changing rolls.
+Available sizes are shared by Print, Print Test and system Paper size; the default selection is saved separately for each printer. The final job's media selection is authoritative. For A5, keep physical 148 × 210 mm and change portrait/landscape separately. Match loaded stock and calibrate the printer sensor when changing rolls.
 
 ## Print Test
 
-Open Print Test, choose paper, press **พิมพ์ฉลากทดสอบ**, and confirm the printer/media and **one copy** in Android's dialog. The diagnostic includes four borders around 2 mm from the edges, an 80 mm ruler (shorter/labeled on narrow stock), a QR containing TSC-TEST-001, and white text on black fill.
+Open Print Test, choose a printer and paper, press **พิมพ์ฉลากทดสอบ**, and confirm the printer/media and **one copy** in Android's dialog. The diagnostic includes four borders around 2 mm from the edges, an 80 mm ruler (shorter/labeled on narrow stock), a QR containing TSC-TEST-001, and white text on black fill.
 
 Opening preview does not print. The README label image is rendered output, not a photograph of physical stock.
 

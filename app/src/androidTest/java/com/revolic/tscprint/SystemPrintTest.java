@@ -10,6 +10,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.*;
 import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
 import org.junit.runner.RunWith;
 import java.io.*;
 import java.net.*;
@@ -22,6 +24,11 @@ public class SystemPrintTest {
     private final Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();
     private final UiDevice device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private final String spooler="com.android.printspooler";
+    private PrinterTestState savedState;
+    @Before public void snapshotSettings() {savedState=PrinterTestState.isolated(context);}
+    @After public void restoreSettings() {savedState.close();}
+    @Test public void systemPrinterIdRoutesToSecondIpAndPortDespiteDifferentAppSelection() throws Exception {runPrint(false,false,PaperSize.LABEL,null,true);}
+    @Test public void printerDetailsTestUsesViewedProfileAndKeepsAppSelection() throws Exception {runPrint(false,true,PaperSize.A5,null,true,true);}
     @Test public void setupStatusMatchesFramework() {
         try(ActivityScenario<MainActivity> scene=ActivityScenario.launch(MainActivity.class)) {
             boolean enabled=context.getSystemService(PrintManager.class).isPrintServiceEnabled(new ComponentName(context,TscPrintService.class));
@@ -44,7 +51,7 @@ public class SystemPrintTest {
             assertTrue("Provisional Letter must not block diagnostic preview",
                 device.wait(Until.hasObject(By.res(spooler,"page_number").text("1/1")),10000));
             assertEquals(PrintJobInfo.STATE_CREATED,job.get().getInfo().getState());
-        } finally {if(job.get()!=null)job.get().cancel();device.pressBack();}
+        } finally {if(job.get()!=null)job.get().cancel();dismissPrintUi();}
     }
     @Test public void systemPrintDispatchesPdfToLocalSocket() throws Exception { runPrint(false,false); }
     @Test public void selectedPagesAndCopiesReachSocketInOrder() throws Exception { runPrint(true,false); }
@@ -54,15 +61,35 @@ public class SystemPrintTest {
     @Test public void a5NormalPdfUsesSelectedStock() throws Exception {runPrint(false,false,PaperSize.A5,null);}
     @Test public void changingSystemPaperSizeRegeneratesTestLabel() throws Exception {runPrint(false,true,PaperSize.LABEL,PaperSize.A5);}
     private void runPrint(boolean subset,boolean diagnostic) throws Exception {runPrint(subset,diagnostic,PaperSize.LABEL,null);}
-    private void runPrint(boolean subset,boolean diagnostic,PaperSize initial,PaperSize override) throws Exception {
+    private void runPrint(boolean subset,boolean diagnostic,PaperSize initial,PaperSize override) throws Exception {runPrint(subset,diagnostic,initial,override,false);}
+    private void runPrint(boolean subset,boolean diagnostic,PaperSize initial,PaperSize override,boolean secondPrinter) throws Exception {
+        runPrint(subset,diagnostic,initial,override,secondPrinter,false);
+    }
+    private void runPrint(boolean subset,boolean diagnostic,PaperSize initial,PaperSize override,boolean secondPrinter,boolean details) throws Exception {
         String savedPaper=PaperSettings.selected(context).id();
         java.util.Set<String> savedCustom=new java.util.HashSet<>(PaperSettings.preferences(context).getStringSet("custom",java.util.Collections.emptySet()));
         PaperSettings.addAndSelect(context,initial);
         PaperSize paper=override==null?initial:override;
         String original=PrinterSettings.host(context);PrinterSettings.save(context,"127.0.0.1");
+        PrinterProfile primary=PrinterSettings.selected(context);
+        PrinterSettings.update(context,primary.withAddress("127.0.0.1",9100).withPaper(details?PaperSize.LABEL.id():initial.id()));
+        String targetName=primary.name, targetHost="127.0.0.1";int targetPort=9100;
+        if(secondPrinter) {
+            PrinterProfile added=PrinterSettings.add(context,"Packing loopback "+Long.toUnsignedString(System.nanoTime(),36),"127.0.0.2",9101,initial.id());
+            targetName=added.name;targetHost=added.host;targetPort=added.port;
+            PrinterSettings.select(context,primary.id);
+        }
+        final String name=targetName;
+        ServerSocket decoy=secondPrinter?new ServerSocket(9100,10,InetAddress.getByName("127.0.0.1")):null;
+        java.util.concurrent.atomic.AtomicBoolean misrouted=new java.util.concurrent.atomic.AtomicBoolean(false);
+        ExecutorService decoyWorker=Executors.newSingleThreadExecutor();
+        if(decoy!=null)decoyWorker.submit(()->{
+            try {while(!decoy.isClosed())try(Socket socket=decoy.accept()){socket.setSoTimeout(3000);if(socket.getInputStream().read()!=-1)misrouted.set(true);}}
+            catch(IOException ignored) { }
+        });
         ExecutorService listener=Executors.newSingleThreadExecutor();
         File pdf=fixture();
-        try(ServerSocket server=new ServerSocket(9100,10,InetAddress.getByName("127.0.0.1"));ActivityScenario<MainActivity> scene=ActivityScenario.launch(MainActivity.class)) {
+        try(ServerSocket server=new ServerSocket(targetPort,10,InetAddress.getByName(targetHost));ActivityScenario<MainActivity> scene=ActivityScenario.launch(MainActivity.class)) {
             server.setSoTimeout(40000);
             Future<byte[]> received=listener.submit(()->{
                 while(true) try(Socket socket=server.accept()) {
@@ -71,10 +98,16 @@ public class SystemPrintTest {
                 }
             });
             if (diagnostic) {
-                device.wait(Until.findObject(By.text("Print Test")),5000).click();
-                UiScrollable content=new UiScrollable(new UiSelector().scrollable(true));
-                content.scrollTextIntoView("พิมพ์ฉลากทดสอบ");
-                device.wait(Until.findObject(By.text("พิมพ์ฉลากทดสอบ")),5000).click();
+                if(details) {
+                    UiTestControls.tap(device,"ตั้งค่า");
+                    String id=PrinterSettings.catalog(context).all().stream().filter(p->p.name.equals(name)).findFirst().get().id;
+                    device.wait(Until.findObject(By.res("saved-printer-"+id)),5000).click();
+                    UiTestControls.tap(device,"พิมพ์ทดสอบเครื่องนี้");
+                    assertEquals("Viewing another profile must not select it for printing",primary.id,PrinterSettings.selected(context).id);
+                } else {
+                    device.wait(Until.findObject(By.text("Print Test")),5000).click();
+                    UiTestControls.tap(device,"พิมพ์ฉลากทดสอบ");
+                }
             } else scene.onActivity(activity->{
                 PrintAttributes attrs=new PrintAttributes.Builder().setMediaSize(PaperSettings.media(initial)).setResolution(new PrintAttributes.Resolution("203","203 DPI",203,203))
                     .setMinMargins(PrintAttributes.Margins.NO_MARGINS).setColorMode(PrintAttributes.COLOR_MODE_MONOCHROME).build();
@@ -82,19 +115,25 @@ public class SystemPrintTest {
             });
             UiObject2 destination=device.wait(Until.findObject(By.res(spooler,"destination_spinner")),10000);
             assertNotNull("System Print opened",destination);destination.click();
-            UiObject2 printer=device.wait(Until.findObject(By.res(spooler,"title").text("TSC MH261T")),5000);
+            UiObject2 printer=device.wait(Until.findObject(By.res(spooler,"title").text(name)),5000);
             if(printer==null) {
                 UiObject2 all=device.wait(Until.findObject(By.textContains("All printers")),3000);assertNotNull("All printers entry",all);all.click();
-                printer=device.wait(Until.findObject(By.text("TSC MH261T")),10000);
+                printer=device.wait(Until.findObject(By.text(name)),10000);
             }
             assertNotNull("TSC discovered",printer);
             boolean picked=false;
-            for(int attempt=0;attempt<20 && !picked;attempt++) {
+            long readyDeadline=android.os.SystemClock.uptimeMillis()+20000;
+            while(android.os.SystemClock.uptimeMillis()<readyDeadline && !picked) {
                 try {
-                    UiObject2 option=device.wait(Until.findObject(By.text("TSC MH261T")),500);
-                    if(option!=null && option.getParent().getParent().isEnabled()) {option.click();picked=true;}
+                    for(UiObject2 option:device.findObjects(By.text(name))) {
+                        if(option.getParent().getParent().isEnabled()) {option.click();picked=true;break;}
+                    }
                 } catch(StaleObjectException ignored) { }
                 if(!picked)android.os.SystemClock.sleep(100);
+            }
+            if(!picked) {
+                device.dumpWindowHierarchy(new File(context.getExternalFilesDir(null),"discovery-failure.xml"));
+                device.takeScreenshot(new File(context.getExternalFilesDir(null),"discovery-failure.png"));
             }
             assertTrue("Online printer selectable",picked);
             if(override!=null) {
@@ -127,6 +166,7 @@ public class SystemPrintTest {
             UiObject2 allow=device.wait(Until.findObject(By.res("android","button1")),2000);
             if(allow!=null)allow.click();
             byte[] actual=received.get(30,TimeUnit.SECONDS);
+            assertFalse("App default must never receive a job for another PrinterId",misrouted.get());
             String stream=new String(actual,StandardCharsets.ISO_8859_1);
             assertEquals(diagnostic?1:subset?4:3,stream.split("PRINT 1,1",-1).length-1);
             assertFalse(stream.contains("SHIFT"));assertFalse(stream.contains("REFERENCE"));
@@ -135,7 +175,7 @@ public class SystemPrintTest {
             int frame=header.length()+paper.stride()*paper.heightDots()+13;
             assertEquals((diagnostic?1:subset?4:3)*frame,actual.length);
             if (diagnostic) {
-                File expectedPdf=TestLabel.createPdf(PrintFiles.directory(context),"127.0.0.1",paper,false,new com.revolic.tscprint.core.Cancellation());
+                File expectedPdf=TestLabel.createPdf(PrintFiles.directory(context),targetHost,paper,false,new com.revolic.tscprint.core.Cancellation());
                 File expectedStream=File.createTempFile("diagnostic-expected-",".tspl",context.getCacheDir());
                 try {
                     PdfSpooler.stage(expectedPdf,expectedStream,null,1,paper,false,new com.revolic.tscprint.core.Cancellation());
@@ -150,10 +190,15 @@ public class SystemPrintTest {
                 assertEquals("Page identity/order "+i+" marker "+marker,marker==expected[i],black);
             }
             try(OutputStream out=new FileOutputStream(new File(context.getExternalFilesDir(null),diagnostic?"test-label-"+paper.id()+".tspl":subset?"subset-capture.tspl":"all-capture.tspl"))){out.write(actual);}
+            if(details) assertEquals(primary.id,PrinterSettings.selected(context).id);
         } catch(Exception|AssertionError e) {
             device.dumpWindowHierarchy(new File(context.getExternalFilesDir(null),"print-failure.xml"));
             device.takeScreenshot(new File(context.getExternalFilesDir(null),"print-failure.png"));throw e;
-        } finally {PaperSettings.preferences(context).edit().putString("selected",savedPaper).putStringSet("custom",savedCustom).commit();PrinterSettings.save(context,original);listener.shutdownNow();pdf.delete();device.pressBack();}
+        } finally {if(decoy!=null)decoy.close();decoyWorker.shutdownNow();PaperSettings.preferences(context).edit().putString("selected",savedPaper).putStringSet("custom",savedCustom).commit();PrinterSettings.save(context,original);listener.shutdownNow();pdf.delete();dismissPrintUi();}
+    }
+    private void dismissPrintUi() {
+        // Failed discovery can leave the printer list above the Print activity.
+        for(int i=0;i<4 && device.hasObject(By.pkg(spooler));i++) {device.pressBack();device.waitForIdle();}
     }
     private File fixture() throws Exception {
         File file=File.createTempFile("system-fixture-",".pdf",context.getCacheDir());PdfDocument doc=new PdfDocument();

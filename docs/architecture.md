@@ -8,11 +8,15 @@ flowchart LR
     D --> E[PdfRenderer: fit / rotate at 203 DPI]
     E --> F[1-bit TSPL BITMAP]
     F --> G[Staged temporary file]
-    G --> H[TCP 9100]
-    H --> I[TSC MH261T]
+    G --> H[Per-endpoint serial queues]
+    H --> I[TCP to selected printer IP and port]
 ```
 
-The service advertises one printer, the configured IPv4 address, a 203 DPI resolution and saved paper sizes. Discovery probes the TCP endpoint without sending print commands.
+The service advertises every saved profile using its stable PrinterId, name, IPv4/port, fixed 203 DPI resolution and saved paper sizes. Each profile selects its own default stock. Discovery independently probes endpoints without sending print commands, removes deleted profiles and polls while discovery/state tracking remains active. Up to three probes run concurrently; offline endpoints do not block listing others.
+
+PrinterSettings stores a validated catalog as one SharedPreferences JSON value. First load migrates legacy host and paper with the original mh261t ID. New profiles use UUIDs. IDs and normalized endpoints must be unique; malformed stored catalogs fail closed without overwriting them. An immutable profile snapshot is resolved from the confirmed job's exact PrinterId, never from the app's current default. Removed/unknown IDs fail before transport. The app's Print / Print Test selector restores defaults; Android Print makes the final destination choice through its own dialog. Settings uses an independent details route: opening, saving or adding a profile preserves app selection. Probe and diagnostic actions capture the saved viewed profile, and draft changes must be saved before either action.
+
+PrinterJobQueue bounds total accepted jobs to 32, serializes each physical IP:port and runs different endpoints on up to 3 workers. Already accepted jobs retain their endpoint even if a profile is edited/deleted or the app switches defaults.
 
 On confirmation it copies the framework PDF, resolves physical dimensions from the job's media ID, renders selected pages, and stages TSPL before connecting. Android may prune page ranges before delivery; page selection handles both full and pruned documents. Pages are fitted, centered and rotated into the physical stock dimensions.
 
@@ -21,6 +25,8 @@ Pixels become 1-bit rows at threshold 128. Each label emits SIZE, DIRECTION 1,0,
 | Source | Responsibility |
 | --- | --- |
 | [TscPrintService.java](../app/src/main/java/com/revolic/tscprint/TscPrintService.java) | Discovery, Android job lifecycle, asynchronous dispatch |
+| [PrinterSettings.java](../app/src/main/java/com/revolic/tscprint/PrinterSettings.java) / [PrinterCatalog.java](../core/src/main/java/com/revolic/tscprint/core/PrinterCatalog.java) | Migration, validation and saved printer profiles |
+| [PrinterJobQueue.java](../core/src/main/java/com/revolic/tscprint/core/PrinterJobQueue.java) | Bounded per-endpoint ordering and cross-printer concurrency |
 | [PdfSpooler.java](../app/src/main/java/com/revolic/tscprint/PdfSpooler.java) | Bounded copy, PDF rasterization, staging |
 | [MainActivity.kt](../app/src/main/java/com/revolic/tscprint/MainActivity.kt) / [PrintApp.kt](../app/src/main/java/com/revolic/tscprint/PrintApp.kt) | Compose UI and Print entry points |
 | [PaperSettings.java](../app/src/main/java/com/revolic/tscprint/PaperSettings.java) / [PaperSize.java](../core/src/main/java/com/revolic/tscprint/core/PaperSize.java) | Saved sizes, media IDs, validation and dimensions |

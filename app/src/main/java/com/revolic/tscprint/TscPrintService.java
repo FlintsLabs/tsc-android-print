@@ -15,10 +15,10 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public final class TscPrintService extends PrintService {
-    public static final String PRINTER_ID="mh261t";
+    public static final String PRINTER_ID=PrinterSettings.LEGACY_ID;
     private final Handler main=new Handler(Looper.getMainLooper());
-    private final ExecutorService worker=Executors.newSingleThreadExecutor();
-    private final ExecutorService probes=Executors.newSingleThreadExecutor();
+    private final PrinterJobQueue worker=new PrinterJobQueue(3,32);
+    private final ExecutorService probes=Executors.newFixedThreadPool(3);
     private final Map<PrintJobId,Task> tasks=new HashMap<>();
     private boolean destroyed;
     private static final class Task {
@@ -37,7 +37,14 @@ public final class TscPrintService extends PrintService {
         if(tasks.containsKey(job.getId())) return;
         if(!PrinterSettings.canUseNetwork(this)) { job.fail("เปิด TSC Direct Print แล้วอนุญาตเครือข่ายภายในก่อนพิมพ์");return; }
         PrintJobInfo info=job.getInfo();
-        if(info.getPrinterId()==null || !PRINTER_ID.equals(info.getPrinterId().getLocalId())) { job.fail("เครื่องพิมพ์ไม่ตรงกับ TSC MH261T");return; }
+        final PrinterProfile printer;
+        try {
+            if(info.getPrinterId()==null || !generatePrinterId(info.getPrinterId().getLocalId()).equals(info.getPrinterId())) {
+                job.fail("เครื่องพิมพ์ไม่ตรงกับบริการ TSC");return;
+            }
+            printer=PrinterSettings.find(this,info.getPrinterId().getLocalId());
+            if(printer==null) {job.fail("เครื่องพิมพ์นี้ถูกลบแล้ว กรุณาเลือกเครื่องใหม่");return;}
+        } catch(IllegalStateException e) {job.fail(e.getMessage());return;}
         final PaperSize paper;final boolean rotate;
         try {
             PrintAttributes.MediaSize media=info.getAttributes()==null?null:info.getAttributes().getMediaSize();
@@ -50,11 +57,12 @@ public final class TscPrintService extends PrintService {
         try { task.cancel.register(data); } catch(IOException e) { job.fail("อ่าน PDF ไม่ได้");tasks.remove(job.getId());return; }
         PageRange[] selected=info.getPages();int[][] ranges=null;
         if(selected!=null) { ranges=new int[selected.length][2];for(int i=0;i<selected.length;i++) {ranges[i][0]=selected[i].getStart();ranges[i][1]=selected[i].getEnd();} }
-        final int[][] pageRanges=ranges;final int copies=info.getCopies();final String host=PrinterSettings.host(this);
-        job.setStatus("กำลังเตรียมฉลาก");
-        worker.execute(()->runTask(task,data,pageRanges,copies,paper,rotate,host));
+        final int[][] pageRanges=ranges;final int copies=info.getCopies();
+        job.setStatus("รอคิว "+printer.name);
+        try {worker.submit(printer.endpoint(),()->runTask(task,data,pageRanges,copies,paper,rotate,printer));}
+        catch(RejectedExecutionException e) {tasks.remove(job.getId());task.cancel.cancel();job.fail(e.getMessage());}
     }
-    private void runTask(Task task,ParcelFileDescriptor data,int[][] ranges,int copies,PaperSize paper,boolean rotate,String host) {
+    private void runTask(Task task,ParcelFileDescriptor data,int[][] ranges,int copies,PaperSize paper,boolean rotate,PrinterProfile printer) {
         File pdf=null,tspl=null;String error=null;boolean sending=false;
         try {
             try(InputStream in=new ParcelFileDescriptor.AutoCloseInputStream(data)) { pdf=PdfSpooler.copyPdf(in,PrintFiles.directory(this),task.cancel); }
@@ -64,7 +72,7 @@ public final class TscPrintService extends PrintService {
             task.cancel.check();
             if(!PrinterSettings.canUseNetwork(this)) throw new SecurityException("ไม่ได้รับสิทธิ์เครือข่ายภายใน");
             main.post(()->{if(!destroyed && !task.cancel.isCancelled()) task.job.setStatus("กำลังส่ง "+(pages*copies)+" ฉลากไปยังเครื่องพิมพ์");});
-            sending=true;JobTransport.send(tspl,copies,host,PrinterSettings.PORT,task.cancel,5000,15000);
+            sending=true;JobTransport.send(tspl,copies,printer.host,printer.port,task.cancel,5000,15000);
         } catch(Exception e) {
             error=(sending ? "ส่งข้อมูลไม่ครบ บางฉลากอาจพิมพ์แล้ว โปรดตรวจก่อนสั่งซ้ำ: " : "เตรียมงานไม่ได้: ")+safeMessage(e);
         } finally { if(pdf!=null) pdf.delete();if(tspl!=null) tspl.delete(); }
@@ -82,44 +90,81 @@ public final class TscPrintService extends PrintService {
     }
     @Override public void onDestroy() {
         destroyed=true;for(Task task:tasks.values()) task.cancel.cancel();
-        worker.shutdownNow();probes.shutdownNow();super.onDestroy();
+        worker.close();probes.shutdownNow();super.onDestroy();
     }
     public static PrintAttributes.MediaSize stock() { return PaperSettings.media(PaperSize.LABEL); }
     private final class Discovery extends PrinterDiscoverySession {
-        private boolean closed;private int generation;private boolean discovering;
-        private final android.content.SharedPreferences.OnSharedPreferenceChangeListener paperChanged=(prefs,key)->{if(discovering && !closed)refresh();};
-        Discovery() {PaperSettings.preferences(TscPrintService.this).registerOnSharedPreferenceChangeListener(paperChanged);}
-        private PrinterInfo info(String host,boolean ready) {
-            PrinterId id=generatePrinterId(PRINTER_ID);
+        private boolean closed,discovering;
+        private final Set<String> tracked=new HashSet<>(),probing=new HashSet<>();
+        private final Map<String,Boolean> reachable=new HashMap<>();
+        private final Runnable poll=this::refresh;
+        private final android.content.SharedPreferences.OnSharedPreferenceChangeListener changed=(prefs,key)->{if(active())refresh();};
+        Discovery() {
+            PaperSettings.preferences(TscPrintService.this).registerOnSharedPreferenceChangeListener(changed);
+            PrinterSettings.preferences(TscPrintService.this).registerOnSharedPreferenceChangeListener(changed);
+        }
+        private boolean active() {return !closed && (discovering || !tracked.isEmpty());}
+        private PrinterInfo info(PrinterProfile printer,boolean ready) {
+            PrinterId id=generatePrinterId(printer.id);
             PrinterCapabilitiesInfo.Builder builder=new PrinterCapabilitiesInfo.Builder(id);
-            PaperSize selected=PaperSettings.selected(TscPrintService.this);
-            for(PaperSize paper:PaperSettings.all(TscPrintService.this))builder.addMediaSize(PaperSettings.media(paper),paper.equals(selected));
+            PaperSize selected=PaperSize.fromId(printer.paperId);
+            List<PaperSize> sizes=new ArrayList<>(PaperSettings.all(TscPrintService.this));
+            if(!sizes.contains(selected))sizes.add(selected);
+            for(PaperSize paper:sizes)builder.addMediaSize(PaperSettings.media(paper),paper.equals(selected));
             PrinterCapabilitiesInfo capabilities=builder
                 .addResolution(new PrintAttributes.Resolution("203","203 DPI",203,203),true)
                 .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                 .setColorModes(PrintAttributes.COLOR_MODE_MONOCHROME,PrintAttributes.COLOR_MODE_MONOCHROME)
                 .setDuplexModes(PrintAttributes.DUPLEX_MODE_NONE,PrintAttributes.DUPLEX_MODE_NONE).build();
-            PendingIntent settings=PendingIntent.getActivity(TscPrintService.this,0,new Intent(TscPrintService.this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
-            return new PrinterInfo.Builder(id,"TSC MH261T",ready?PrinterInfo.STATUS_IDLE:PrinterInfo.STATUS_UNAVAILABLE)
-                .setDescription(host+":9100 · 203 DPI").setCapabilities(capabilities).setInfoIntent(settings).build();
+            Intent intent=new Intent(TscPrintService.this,MainActivity.class).setData(android.net.Uri.parse("tsc-printer:"+printer.id));
+            PendingIntent settings=PendingIntent.getActivity(TscPrintService.this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+            return new PrinterInfo.Builder(id,printer.name,ready?PrinterInfo.STATUS_IDLE:PrinterInfo.STATUS_UNAVAILABLE)
+                .setDescription(printer.endpoint()+" · 203 DPI").setCapabilities(capabilities).setInfoIntent(settings).build();
         }
         private void refresh() {
-            String host=PrinterSettings.host(TscPrintService.this);int request=++generation;
-            if(!PrinterSettings.canUseNetwork(TscPrintService.this)) {addPrinters(Collections.singletonList(info(host,false)));return;}
-            // The fixed endpoint remains selectable while reachability is checked.
-            addPrinters(Collections.singletonList(info(host,true)));
-            probes.execute(()->{
-                boolean online=false;
-                try(Socket socket=new Socket()) {socket.connect(new InetSocketAddress(host,PrinterSettings.PORT),2500);online=true;}catch(IOException|SecurityException ignored) { }
-                boolean result=online;
-                main.post(()->{if(!closed && request==generation) addPrinters(Collections.singletonList(info(host,result)));});
-            });
+            if(closed)return;
+            main.removeCallbacks(poll);
+            final PrinterCatalog catalog;
+            try {catalog=PrinterSettings.catalog(TscPrintService.this);}
+            catch(IllegalStateException e) {
+                List<PrinterId> ids=new ArrayList<>();for(PrinterInfo p:getPrinters())ids.add(p.getId());removePrinters(ids);return;
+            }
+            List<PrinterId> removed=new ArrayList<>();
+            for(PrinterInfo old:getPrinters())if(catalog.find(old.getId().getLocalId())==null)removed.add(old.getId());
+            if(!removed.isEmpty())removePrinters(removed);
+            boolean allowed=PrinterSettings.canUseNetwork(TscPrintService.this);
+            List<PrinterInfo> infos=new ArrayList<>();
+            for(PrinterProfile p:catalog.all())infos.add(info(p,allowed && reachable.getOrDefault(p.endpoint(),true)));
+            addPrinters(infos);
+            if(allowed)for(PrinterProfile p:catalog.all()) {
+                if(!probing.add(p.endpoint()))continue;
+                probes.execute(()->{
+                    boolean online=false;
+                    try(Socket socket=new Socket()) {socket.connect(new InetSocketAddress(p.host,p.port),2500);online=true;}
+                    catch(IOException|SecurityException ignored) { }
+                    boolean result=online;
+                    main.post(()->{
+                        probing.remove(p.endpoint());if(closed)return;
+                        reachable.put(p.endpoint(),result);
+                        if(!active())return;
+                        try {
+                            PrinterProfile current=PrinterSettings.find(TscPrintService.this,p.id);
+                            if(current!=null && current.endpoint().equals(p.endpoint()))addPrinters(Collections.singletonList(info(current,result && PrinterSettings.canUseNetwork(TscPrintService.this))));
+                        } catch(IllegalStateException ignored) { }
+                    });
+                });
+            }
+            if(active())main.postDelayed(poll,5000);
         }
         @Override public void onStartPrinterDiscovery(List<PrinterId> priorityList) {discovering=true;refresh();}
-        @Override public void onStopPrinterDiscovery() {discovering=false;generation++;}
+        @Override public void onStopPrinterDiscovery() {discovering=false;if(!active())main.removeCallbacks(poll);}
         @Override public void onValidatePrinters(List<PrinterId> ids) {refresh();}
-        @Override public void onStartPrinterStateTracking(PrinterId id) {refresh();}
-        @Override public void onStopPrinterStateTracking(PrinterId id) { }
-        @Override public void onDestroy() {closed=true;generation++;PaperSettings.preferences(TscPrintService.this).unregisterOnSharedPreferenceChangeListener(paperChanged);}
+        @Override public void onStartPrinterStateTracking(PrinterId id) {tracked.add(id.getLocalId());refresh();}
+        @Override public void onStopPrinterStateTracking(PrinterId id) {tracked.remove(id.getLocalId());if(!active())main.removeCallbacks(poll);}
+        @Override public void onDestroy() {
+            closed=true;main.removeCallbacks(poll);
+            PaperSettings.preferences(TscPrintService.this).unregisterOnSharedPreferenceChangeListener(changed);
+            PrinterSettings.preferences(TscPrintService.this).unregisterOnSharedPreferenceChangeListener(changed);
+        }
     }
 }

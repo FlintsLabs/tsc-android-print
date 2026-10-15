@@ -7,6 +7,26 @@ import androidx.compose.ui.unit.dp
 
 // One 24dp outlined icon family, without a large icon dependency.
 object PrintIcons {
+    val ChevronRight = ImageVector.Builder("ChevronRight", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = null, stroke = androidx.compose.ui.graphics.SolidColor(Color.Black), strokeLineWidth = 1.8f) {
+            moveTo(9f,6f);lineTo(15f,12f);lineTo(9f,18f)
+        }
+    }.build()
+    val ChevronLeft = ImageVector.Builder("ChevronLeft", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = null, stroke = androidx.compose.ui.graphics.SolidColor(Color.Black), strokeLineWidth = 1.8f) {
+            moveTo(15f,6f);lineTo(9f,12f);lineTo(15f,18f)
+        }
+    }.build()
+    val Add = ImageVector.Builder("Add", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = null, stroke = androidx.compose.ui.graphics.SolidColor(Color.Black), strokeLineWidth = 1.8f) {
+            moveTo(12f,5f);verticalLineTo(19f);moveTo(5f,12f);horizontalLineTo(19f)
+        }
+    }.build()
+    val ChevronDown = ImageVector.Builder("ChevronDown", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = null, stroke = androidx.compose.ui.graphics.SolidColor(Color.Black), strokeLineWidth = 1.8f) {
+            moveTo(6f,9f);lineTo(12f,15f);lineTo(18f,9f)
+        }
+    }.build()
     val Printer = ImageVector.Builder("Printer", 24.dp, 24.dp, 24f, 24f).apply {
         path(fill = null, stroke = androidx.compose.ui.graphics.SolidColor(Color.Black), strokeLineWidth = 1.8f) {
             moveTo(7f,8f);verticalLineTo(3f);horizontalLineTo(17f);verticalLineTo(8f)
