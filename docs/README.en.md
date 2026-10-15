@@ -14,6 +14,8 @@ An independent Android Print Service for **TSC MH261T, 203 DPI**. It converts PD
 
 Select the installed TSC service instead of adding an IP through Android's Default Print Service, which uses different protocols/discovery.
 
+For CipherLab RS38, see the [installation guide](rs38.md). The app requires Android 13+ and an available Android print framework; RS38 hardware/firmware has not been acceptance-tested.
+
 ## Print
 
 Use the normal **Print** action in a browser/PDF viewer that supports Android printing. Select TSC MH261T, review paper size, orientation, pages and copies, then confirm. To select a PDF directly, open **พิมพ์ → เลือก PDF เพื่อพิมพ์** (Print → Choose PDF). The same system dialog appears.

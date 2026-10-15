@@ -56,6 +56,8 @@ An Android Print Service that sends PDF labels directly to a TSC MH261T over TCP
 
 ไม่ต้องเพิ่ม IP ผ่าน **System / Default Print Service → Add printer by IP**: ให้เลือกบริการ **TSC Direct Print** ที่ติดตั้งจาก APK นี้
 
+สำหรับเครื่อง handheld ดู **[ขั้นตอนติดตั้งบน CipherLab RS38](docs/rs38.md)** — ยังต้องทดสอบบริการพิมพ์บนเฟิร์มแวร์ของเครื่องจริง
+
 ### พิมพ์จากเว็บไซต์
 
 ใช้ปุ่ม **Print** ของเว็บไซต์หรือเมนู Print ของ browser แล้วเลือก **TSC MH261T** เว็บไซต์/browser ต้องเปิด Android Print dialog ได้ก่อน แอปนี้ไม่ได้เพิ่มความสามารถพิมพ์ให้ WebView ที่ไม่รองรับ
