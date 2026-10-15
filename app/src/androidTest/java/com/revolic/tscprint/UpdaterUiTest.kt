@@ -32,15 +32,15 @@ class UpdaterUiTest {
         }
     }
     @Test fun downloadProgressPermissionInstallAndRetryStatesAreActionable() {
-        val release=UpdaterTest.release(UpdaterTest.fixture("future"),"v1.3.5")
-        val state=mutableStateOf(UpdateUiState(UpdatePhase.AVAILABLE,release,"พบเวอร์ชันใหม่ 1.3.5"))
+        val release=UpdaterTest.release(UpdaterTest.fixture("future"),"v1.3.6")
+        val state=mutableStateOf(UpdateUiState(UpdatePhase.AVAILABLE,release,"พบเวอร์ชันใหม่ 1.3.6"))
         val permission=mutableStateOf(false)
         var checks=0;var grants=0;var installs=0
         ActivityScenario.launch(MainActivity::class.java).use { scene ->
             scene.onActivity { activity -> activity.setContent {
                 PrintTheme { Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp)) {
                     UpdatePanel(state.value,permission.value,{ checks++ },
-                        { state.value=UpdateUiState(UpdatePhase.DOWNLOADING,release,"กำลังดาวน์โหลด 1.3.5…",.42f) },
+                        { state.value=UpdateUiState(UpdatePhase.DOWNLOADING,release,"กำลังดาวน์โหลด 1.3.6…",.42f) },
                         { installs++ }, { grants++;permission.value=true }, {})
                 } }
             } }
@@ -48,13 +48,13 @@ class UpdaterUiTest {
             assertTrue(device.wait(Until.hasObject(By.text("ดาวน์โหลด 42%")),3000))
             assertTrue(device.hasObject(By.res("check-update").enabled(false)))
             device.takeScreenshot(File(instrumentation.targetContext.getExternalFilesDir(null),"update-downloading.png"))
-            scene.onActivity { state.value=UpdateUiState(UpdatePhase.READY,release,"ตรวจไฟล์แล้ว พร้อมติดตั้ง 1.3.5") }
+            scene.onActivity { state.value=UpdateUiState(UpdatePhase.READY,release,"ตรวจไฟล์แล้ว พร้อมติดตั้ง 1.3.6") }
             UiTestControls.tap(device,"อนุญาตติดตั้งจากแอปนี้");assertEquals(1,grants)
-            UiTestControls.tap(device,"ติดตั้งอัปเดต 1.3.5");assertEquals(1,installs)
+            UiTestControls.tap(device,"ติดตั้งอัปเดต 1.3.6");assertEquals(1,installs)
             device.takeScreenshot(File(instrumentation.targetContext.getExternalFilesDir(null),"update-ready.png"))
             scene.onActivity { state.value=UpdateUiState(UpdatePhase.ERROR,message="ตรวจสอบอัปเดตไม่ได้: เชื่อมต่ออินเทอร์เน็ตไม่ได้") }
             UiTestControls.tap(device,"ตรวจสอบอัปเดต");assertEquals(1,checks)
-            assertFalse(device.hasObject(By.res("install-update")))
+            assertTrue(device.wait(Until.gone(By.res("install-update")),3000))
             device.takeScreenshot(File(instrumentation.targetContext.getExternalFilesDir(null),"update-error.png"))
         }
     }

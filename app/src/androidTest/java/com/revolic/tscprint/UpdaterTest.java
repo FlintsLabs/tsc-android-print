@@ -46,7 +46,7 @@ public class UpdaterTest {
         });
     }
     @Test public void releaseParserRejectsDraftMissingAssetsAndForeignDownloadOrigins() throws Exception {
-        UpdateRelease valid=release(fixture("future"),"v1.3.5");String json=metadata(valid);
+        UpdateRelease valid=release(fixture("future"),"v1.3.6");String json=metadata(valid);
         assertEquals(valid.version,UpdateRelease.parse(json).version);
         assertThrows(IllegalArgumentException.class,()->UpdateRelease.parse(new JSONObject(json).put("draft",true).toString()));
         assertThrows(IllegalArgumentException.class,()->UpdateRelease.parse(new JSONObject(json).put("prerelease",true).toString()));
@@ -57,10 +57,10 @@ public class UpdaterTest {
         JSONObject foreign = new JSONObject(json);
         foreign.getJSONArray("assets").getJSONObject(0).put("browser_download_url",valid.apkUrl.replace("github.com","evil.example"));
         assertThrows(IllegalArgumentException.class,()->UpdateRelease.parse(foreign.toString()));
-        assertThrows(IllegalArgumentException.class,()->UpdateRelease.parse(json.replace("v1.3.5","v1.3.5-beta")));
+        assertThrows(IllegalArgumentException.class,()->UpdateRelease.parse(json.replace("v1.3.6","v1.3.6-beta")));
     }
     @Test public void downloaderVerifiesChecksumAndDeletesCorruptPartialFiles() throws Exception {
-        byte[] bytes=fixture("future");UpdateRelease release=release(bytes,"v1.3.5");
+        byte[] bytes=fixture("future");UpdateRelease release=release(bytes,"v1.3.6");
         File target=new File(context.getCacheDir(),"test-update.apk");
         try {
             UpdateRelease verified=client(release,bytes).download(release,target,new Cancellation(),n->{});
@@ -74,14 +74,14 @@ public class UpdaterTest {
         File target=new File(context.getCacheDir(),"verify-update.apk");
         try {
             byte[] future=fixture("future");java.nio.file.Files.write(target.toPath(),future);
-            UpdateInstaller.verify(context,target,release(future,"v1.3.5"),new Cancellation());
+            UpdateInstaller.verify(context,target,release(future,"v1.3.6"),new Cancellation());
             for(String name:new String[]{"wrong-package","wrong-signer","old"}) {
                 byte[] bytes=fixture(name);java.nio.file.Files.write(target.toPath(),bytes);
-                UpdateRelease r=release(bytes,name.equals("old")?"v1.3.3":"v1.3.5");
+                UpdateRelease r=release(bytes,name.equals("old")?"v1.3.3":"v1.3.6");
                 assertThrows(name,IOException.class,()->UpdateInstaller.verify(context,target,r,new Cancellation()));
             }
             java.nio.file.Files.write(target.toPath(),future);future[future.length-1]^=1;
-            assertThrows(IOException.class,()->UpdateInstaller.verify(context,target,release(future,"v1.3.5"),new Cancellation()));
+            assertThrows(IOException.class,()->UpdateInstaller.verify(context,target,release(future,"v1.3.6"),new Cancellation()));
         } finally {target.delete();}
     }
     @Test public void installerSharesOnlyUpdateFilesAndRequiresNativeConfirmation() throws Exception {

@@ -4,9 +4,9 @@
 
 An independent Android Print Service for **TSC MH261T, 203 DPI**. It converts PDF pages to monochrome TSPL bitmaps and sends them directly over **configurable TCP endpoints (default 9100)**. A Mac, USB cable or print server is not needed. The UI is currently Thai, with light/dark themes and adaptive navigation.
 
-**Published version: [1.3.4 (versionCode 9)](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.4).** Settings now includes manual GitHub Release checks, APK download and verified native installation. See the [changelog](../CHANGELOG.md) and [verification](verification.md). A source push does not automatically publish an APK.
+**Published version: [1.3.5 (versionCode 10)](https://github.com/FlintsLabs/tsc-android-print/releases/tag/v1.3.5).** This release lets existing 1.3.4 installations try the manual in-app GitHub update flow. See the [changelog](../CHANGELOG.md) and [verification](verification.md). A source push does not automatically publish an APK.
 
-[Download APK 1.3.4](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.4/TSC-Direct-Print-1.3.4.apk) · [SHA256SUMS.txt](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.4/SHA256SUMS.txt)
+[Download APK 1.3.5](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.5/TSC-Direct-Print-1.3.5.apk) · [SHA256SUMS.txt](https://github.com/FlintsLabs/tsc-android-print/releases/download/v1.3.5/SHA256SUMS.txt)
 
 <p align="center">
   <img src="images/print.png" width="235" alt="1.3.4: Print screen with printer and paper selection" />

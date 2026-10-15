@@ -31,7 +31,7 @@ class UpdaterStateTest {
     }
     @Test fun downloadAndProcessRestoreRetainVerifiedCandidateWithoutNetwork() = isolate {
         val bytes = UpdaterTest.fixture("future")
-        val release = UpdaterTest.release(bytes,"v1.3.5")
+        val release = UpdaterTest.release(bytes,"v1.3.6")
         val store = ViewModelStore()
         lateinit var first: UpdateViewModel
         instrumentation.runOnMainSync {
@@ -53,7 +53,7 @@ class UpdaterStateTest {
         instrumentation.runOnMainSync { store.clear() }
     }
     @Test fun cancellationPreventsLateDownloadCompletionAndCleansPartialFile() = isolate {
-        val bytes=UpdaterTest.fixture("future");val release=UpdaterTest.release(bytes,"v1.3.5")
+        val bytes=UpdaterTest.fixture("future");val release=UpdaterTest.release(bytes,"v1.3.6")
         val entered=CountDownLatch(1);val exited=CountDownLatch(1)
         val client=GitHubReleaseClient { url,cancel ->
             if(url==release.apkUrl) {

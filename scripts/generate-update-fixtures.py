@@ -14,10 +14,10 @@ if not alternate.exists():
                     '-storepass', 'android', '-keypass', 'android', '-keyalg', 'RSA', '-keysize', '2048',
                     '-validity', '3650', '-dname', 'CN=Updater Test Only'], check=True, capture_output=True)
 for name, package, code, version, wrong_signer in [
-    ('future', 'com.revolic.tscprint', 10, '1.3.5', False),
+    ('future', 'com.revolic.tscprint', 11, '1.3.6', False),
     ('old', 'com.revolic.tscprint', 8, '1.3.3', False),
-    ('wrong-package', 'com.revolic.other', 10, '1.3.5', False),
-    ('wrong-signer', 'com.revolic.tscprint', 10, '1.3.5', True),
+    ('wrong-package', 'com.revolic.other', 11, '1.3.6', False),
+    ('wrong-signer', 'com.revolic.tscprint', 11, '1.3.6', True),
 ]:
     manifest = destination / 'AndroidManifest.xml'
     manifest.write_text(f'''<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="{package}"

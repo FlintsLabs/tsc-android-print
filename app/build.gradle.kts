@@ -4,7 +4,7 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.plugin.compose
 android {
  namespace = "com.revolic.tscprint"
  compileSdk = 37
- defaultConfig { applicationId = "com.revolic.tscprint"; minSdk = 33; targetSdk = 37; versionCode = 9; versionName = "1.3.4"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
+ defaultConfig { applicationId = "com.revolic.tscprint"; minSdk = 33; targetSdk = 37; versionCode = 10; versionName = "1.3.5"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
  buildFeatures { compose = true; buildConfig = true }
  testOptions { animationsDisabled = true }
  compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
